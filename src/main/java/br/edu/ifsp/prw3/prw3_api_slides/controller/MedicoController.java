@@ -1,14 +1,18 @@
 package br.edu.ifsp.prw3.prw3_api_slides.controller;
 
-import br.edu.ifsp.prw3.prw3_api_slides.medico.DadosCadastroMedico;
-import br.edu.ifsp.prw3.prw3_api_slides.medico.Medico;
-import br.edu.ifsp.prw3.prw3_api_slides.medico.MedicoRepository;
+import br.edu.ifsp.prw3.prw3_api_slides.medico.*;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("medicos")
@@ -19,8 +23,43 @@ public class MedicoController {
 
     @PostMapping
     @Transactional
-    public void cadastrar(@RequestBody DadosCadastroMedico dados){
+    public void cadastrar(@RequestBody @Valid DadosCadastroMedico dados){
         repository.save( new Medico(    dados));
+    }
 
+    @GetMapping
+    public List<Medico> listar(){
+        return repository.findAll();
+    }
+
+    @GetMapping("algunsdados")
+    public Page<DadosListagemMedico> listarAlgunsDados(
+            @PageableDefault(size=2,
+                    page=0,
+                    sort={"nome", "crm"},
+                    direction = Sort.Direction.DESC ) Pageable paginacao)
+    {
+        return repository.findAll(paginacao).map(DadosListagemMedico::new);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Medico> getMedicoById(@PathVariable Long id) {
+
+        Optional<Medico> medicoOptional = repository.findById(id);
+
+        if (medicoOptional.isPresent()) {
+            Medico medico = medicoOptional.get();
+            return ResponseEntity.ok(medico);
+        }
+        else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping
+    @Transactional
+    public void atualizar(@RequestBody @Valid DadosAtualizacaoMedico dados){
+        Medico medico = repository.getReferenceById(dados.id());
+        medico.atualizarInformacoes(dados);
     }
 }
