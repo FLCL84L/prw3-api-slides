@@ -46,13 +46,13 @@ public class MedicoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Medico> getMedicoById(@PathVariable Long id) {
+    public ResponseEntity getMedicoById(@PathVariable Long id) {
 
         Optional<Medico> medicoOptional = repository.findById(id);
 
         if (medicoOptional.isPresent()) {
             Medico medico = medicoOptional.get();
-            return ResponseEntity.ok(medico);
+            return ResponseEntity.ok(new DadosDetalhamentoMedico(medico));
         }
         else {
             return ResponseEntity.notFound().build();
