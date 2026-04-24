@@ -33,13 +33,9 @@ public class MedicoController {
     }
 
     @GetMapping("algunsdados")
-    public Page<DadosListagemMedico> listarAlgunsDados(
-            @PageableDefault(size=2,
-                    page=0,
-                    sort={"nome", "crm"},
-                    direction = Sort.Direction.DESC ) Pageable paginacao)
+    public Page<DadosListagemMedico> listarAlgunsDados(Pageable paginacao)
     {
-        return repository.findAll(paginacao).map(DadosListagemMedico::new);
+        return repository.findAllByAtivoTrue(paginacao).map(DadosListagemMedico::new);
     }
 
     @GetMapping("/{id}")
@@ -58,8 +54,17 @@ public class MedicoController {
 
     @PutMapping
     @Transactional
-    public void atualizar(@RequestBody @Valid DadosAtualizacaoMedico dados){
+    public ResponseEntity atualizar(@RequestBody @Valid DadosAtualizacaoMedico dados){
         Medico medico = repository.getReferenceById(dados.id());
         medico.atualizarInformacoes(dados);
+        return ResponseEntity.ok(new DadosDetalhamentoMedico(medico));
+    }
+
+    @DeleteMapping("/{id}")
+    @Transactional
+    public ResponseEntity excluir(@PathVariable Long id){
+        Medico medico = repository.getReferenceById(id);
+        medico.excluir();
+        return ResponseEntity.noContent().build();
     }
 }
